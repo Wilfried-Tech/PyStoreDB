@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from typing import Any
 
 from PyStore._utils import is_valid_document, parent_path
 from PyStore.engines import PyStoreEngine
+from PyStore.query import FieldPath
 from PyStore.types import Json
 
 
@@ -43,7 +46,7 @@ class DocumentDelegate:
     def update(self, data: Json):
         self.engine.update(self.path, data)
 
-    def get_field(self, field: str, default=None) -> Any:
+    def get_field(self, field: str | FieldPath, default=None) -> Any:
         return self.engine.get_field(self.path, field, default)
 
     def data(self) -> Json | None:

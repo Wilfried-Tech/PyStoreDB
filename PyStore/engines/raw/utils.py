@@ -9,22 +9,24 @@ from PyStore.types import Json, supported_types
 
 """""
 {
-    collection: {
-        "adskafwekdk...": {
+    collection_xxxx: {
+        "doc_id_xxxx": {
             sub_collection: {...}
             ...
             __data__:{
                 a: 1,
                 ...,
-                custom: {
+                complex_field: {
                     __meta__:{
-                        type: time
+                        type: time|dict|datetime|...
                     }
-                    value: '23:56'
+                    value: transformed_value
                 }
             }
         }
-    }
+        ...
+    },
+    ...
 }
 """""
 
@@ -38,7 +40,7 @@ DATETIME_META_KEY = 'datetime'
 
 def create_database(path: str):
     if not os.path.exists(path):
-        with open(path, 'w') as f:
+        with open(path, 'w+') as f:
             f.write(json.dumps({}, indent=4))
 
 
@@ -80,12 +82,12 @@ def parse_value_metadata(value) -> Any:
         raise ValueError(f'{value} is not supported')
     elif isinstance(value, dict):
         if META_KEY not in value:
-            raise ValueError
+            raise ValueError(f'{value} is not a valid value')
         meta = value[META_KEY]
         if meta[META_TYPE_KEY] == DICT_META_KEY:
-            return value[META_TYPE_VALUE_KEY]
+            return meta[META_TYPE_VALUE_KEY]
         if meta[META_TYPE_KEY] == DATETIME_META_KEY:
-            return datetime.fromisoformat(value[META_TYPE_VALUE_KEY])
+            return datetime.fromisoformat(meta[META_TYPE_VALUE_KEY])
     return value
 
 
@@ -143,4 +145,14 @@ def decode_collection_docs(data):
     decoded = {}
     for key, value in data.items():
         decoded[key] = decode_document_data(value)
+    return decoded
+
+
+def decode_all_data(data: Json):
+    decoded = {}
+    for key, value in data.items():
+        if key == DATA_KEY:
+            decoded[key] = decode_document_data(data)
+        else:
+            decoded[key] = decode_all_data(value)
     return decoded

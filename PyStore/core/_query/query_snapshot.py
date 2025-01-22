@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import abc
-from typing import TypeVar, Generic, TYPE_CHECKING, Generator, Any
+from functools import cached_property
+from typing import TypeVar, Generic, TYPE_CHECKING
 
 from PyStore.core._query.delegate import QueryDelegate
 from PyStore.types import Json
@@ -17,7 +18,7 @@ class QuerySnapshot(abc.ABC, Generic[_T]):
 
     @property
     @abc.abstractmethod
-    def docs(self) -> Generator[JsonQueryDocumentSnapshot, Any, None]:
+    def docs(self) -> list[JsonQueryDocumentSnapshot]:
         pass
 
     @property
@@ -31,19 +32,19 @@ class JsonQuerySnapshot(QuerySnapshot[Json]):
     def __init__(self, delegate: QueryDelegate):
         self._delegate = delegate
 
-    @property
-    def docs(self) -> Generator[JsonQueryDocumentSnapshot, Any, None]:
-        data = self._delegate.engine.get_collection(self._delegate.path, **self._delegate.parameters)
-
+    @cached_property
+    def docs(self) -> list[JsonQueryDocumentSnapshot]:
+        data = self._delegate.engine.get_collection(self._delegate.path, **self._delegate.kwargs)
         from .._query.query_document_snapshot import JsonQueryDocumentSnapshot
-
-        for _id, doc in data.items():
-            yield JsonQueryDocumentSnapshot(
+        return [
+            JsonQueryDocumentSnapshot(
                 DocumentDelegate(
                     f'{self._delegate.path}/{_id}',
                     self._delegate.engine,
                 )
             )
+            for _id, doc in data.items()
+        ]
 
     @property
     def size(self) -> int:

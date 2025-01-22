@@ -1,7 +1,7 @@
 import unittest
 
 from PyStore.errors import PyStorePathError
-from PyStore.tests import PyStoreTestCase
+from PyStore.test import PyStoreTestCase
 
 
 class DocumentCRUDTestCase(PyStoreTestCase):

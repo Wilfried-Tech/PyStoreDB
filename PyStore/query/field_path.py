@@ -8,6 +8,16 @@ class _FieldPathMeta(type):
 class FieldPath(metaclass=_FieldPathMeta):
     def __init__(self, field: str):
         self.field = field
+        # TODO implement nested fields to access map an list
 
     def __eq__(self, other):
         return isinstance(other, FieldPath) and self.field == other.field
+
+    def __hash__(self):
+        return hash(self.field)
+
+    def __str__(self):
+        return self.field
+
+    def __repr__(self):
+        return f'FieldPath({self.field})'

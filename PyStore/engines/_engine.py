@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import abc
 from typing import Any
 
+from PyStore.query import FieldPath
 from PyStore.types import Json
 
 
@@ -19,6 +22,10 @@ class PyStoreEngine(abc.ABC):
         :rtype: PyStore.PyStore
         """
         return getattr(self, '_store', None)
+
+    @property
+    def in_memory(self):
+        return self.store.__class__.settings.store_dir is None
 
     @abc.abstractmethod
     def path_exists(self, path: str) -> bool:
@@ -45,10 +52,11 @@ class PyStoreEngine(abc.ABC):
         pass
 
     def initialize(self):
-        self.create_database_if_not_exists()
+        if not self.in_memory:
+            self.create_database_if_not_exists()
 
     @abc.abstractmethod
-    def get_field(self, path: str, field: str, default=None) -> Any:
+    def get_field(self, path: str, field: str | FieldPath, default=None) -> Any:
         pass
 
     @abc.abstractmethod
@@ -65,4 +73,8 @@ class PyStoreEngine(abc.ABC):
 
     @abc.abstractmethod
     def clear(self):
+        pass
+
+    @abc.abstractmethod
+    def get_raw(self, path):
         pass

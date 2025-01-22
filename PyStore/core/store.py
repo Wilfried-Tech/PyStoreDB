@@ -30,11 +30,16 @@ class _PyStoreMeta(type):
     def __call__(cls, *args, **kwargs):
         raise ValueError(f"{cls.__name__} is not instantiable use get_instance instead")
 
-    def get_instance(cls, name: str = DEFAULT_STORE_NAME, *args, **kwargs):
+    def destroy_instance(cls, name: str):
+        return cls.__instances.pop(name)
+
+    def clear_instances(cls):
+        cls.__instances = {}
+
+    def get_instance(cls, name: str = DEFAULT_STORE_NAME, *args, **kwargs) -> PyStore:
         """
         Create or get an instance of PyStore from name of store
         :param name: name of store
-        :rtype PyStore
         """
         with cls.__lock:
             if name == '':
@@ -60,7 +65,8 @@ class _PyStoreMeta(type):
     def initialize(cls) -> None:
         if cls.is_initialised:
             raise PyStoreInitialisationError
-        os.makedirs(cls.settings.store_dir, exist_ok=True)
+        if cls.settings.store_dir is not None:
+            os.makedirs(cls.settings.store_dir, exist_ok=True)
         setattr(cls, '__initialised', True)
 
     @property
@@ -82,6 +88,12 @@ class PyStore(metaclass=_PyStoreMeta):
 
     def clear(self):
         self._delegate.engine.clear()
+
+    def destroy(self):
+        self.__class__.destroy_instance(self.name)
+
+    def get_raw_data(self, path: str = '') -> dict:
+        return self._delegate.engine.get_raw(path)
 
     def __repr__(self):
         return f"<PyStore name={self.name}>"

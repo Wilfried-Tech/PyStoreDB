@@ -1,5 +1,8 @@
-from .._query import QueryDelegate
+from __future__ import annotations
+
 from PyStore.engines import PyStoreEngine
+from .._query import QueryDelegate
+from ..._utils import generate_uuid
 
 
 class CollectionDelegate(QueryDelegate):
@@ -18,7 +21,6 @@ class CollectionDelegate(QueryDelegate):
         :rtype: PyStore.core._delegates.document.DocumentDelegate
         """
         if path is None:
-            import uuid
-            path = uuid.uuid4().hex[:16]
+            path = generate_uuid()
         from PyStore.core._delegates.document import DocumentDelegate
         return DocumentDelegate(f'{self.path}/{path}', self.engine)

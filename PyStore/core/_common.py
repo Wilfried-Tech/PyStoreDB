@@ -5,6 +5,7 @@ from typing import Generic, TypeVar, Any
 
 from PyStore.types import Json
 from ._query import Query
+from ..query import FieldPath
 
 _T = TypeVar('_T')
 
@@ -27,6 +28,9 @@ class StoreObject(abc.ABC):
         if not isinstance(other, StoreObject):
             return False
         return self.path == other.path and self.id == other.id
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}('{self.path}')"
 
 
 class CollectionReference(StoreObject, Query[_T], Generic[_T]):
@@ -63,7 +67,7 @@ class DocumentSnapshot(abc.ABC, Generic[_T]):
         pass
 
     @abc.abstractmethod
-    def get(self, field: str) -> Any:
+    def get(self, field: str | FieldPath) -> Any:
         pass
 
     def __getitem__(self, item: str) -> Any:

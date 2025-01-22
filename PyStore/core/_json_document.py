@@ -5,6 +5,7 @@ from typing import Any
 from PyStore.core._common import DocumentSnapshot, DocumentReference, CollectionReference
 from PyStore.types import Json
 from ._delegates import DocumentDelegate
+from ..query import FieldPath
 
 
 class JsonDocumentReference(DocumentReference[Json]):
@@ -56,7 +57,7 @@ class JsonDocumentSnapshot(DocumentSnapshot[Json]):
     def id(self) -> str:
         return self._delegate.id
 
-    def get(self, field: str) -> Any:
+    def get(self, field: str|FieldPath) -> Any:
         return self._delegate.get_field(field)
 
     @property

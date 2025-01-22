@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from PyStore.errors import PyStorePathError, PyStoreUnsupportedTypeError
 from PyStore.types import Json, supported_types
 
@@ -61,3 +63,10 @@ def validate_data(data: Json):
         if not isinstance(key, str):
             raise TypeError('data key must be str')
         validate_data_value(value)
+
+
+def generate_uuid():
+    import uuid
+    # from datetime import datetime
+    # return (str(datetime.now().timestamp()).replace('.', '') + uuid.uuid4().hex)[:20]
+    return uuid.uuid4().hex[:20]
