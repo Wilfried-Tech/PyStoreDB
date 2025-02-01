@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from PyStore.core._common import DocumentSnapshot, DocumentReference, CollectionReference
+from PyStore.models import DocumentSnapshot, DocumentReference, CollectionReference
 from PyStore.types import Json
-from ._delegates import DocumentDelegate
+from .._delegates import DocumentDelegate
 from ..query import FieldPath
 
 
@@ -20,11 +20,11 @@ class JsonDocumentReference(DocumentReference[Json]):
     @property
     def parent(self) -> CollectionReference[Json]:
         if self._delegate.parent is not None:
-            from PyStore.core._json_collection import JsonCollectionReference
+            from PyStore.models.collection import JsonCollectionReference
             return JsonCollectionReference(self._delegate.parent)
 
     def collection(self, path: str) -> CollectionReference[Json]:
-        from PyStore.core._json_collection import JsonCollectionReference
+        from PyStore.models.collection import JsonCollectionReference
         return JsonCollectionReference(self._delegate.collection(path))
 
     def update(self, data: Json = None, **kwargs) -> None:
@@ -57,7 +57,7 @@ class JsonDocumentSnapshot(DocumentSnapshot[Json]):
     def id(self) -> str:
         return self._delegate.id
 
-    def get(self, field: str|FieldPath) -> Any:
+    def get(self, field: str | FieldPath) -> Any:
         return self._delegate.get_field(field)
 
     @property

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from PyStore._utils import is_valid_document, parent_path
-from PyStore.engines import PyStoreEngine
 from PyStore.query import FieldPath
 from PyStore.types import Json
 
+if TYPE_CHECKING:
+    from PyStore.engines import PyStoreEngine
 
 class DocumentDelegate:
 
@@ -26,12 +27,12 @@ class DocumentDelegate:
     def parent(self):
         path = parent_path(self.path)
         if path:
-            from PyStore.core._delegates.collection import CollectionDelegate
+            from PyStore._delegates import CollectionDelegate
             return CollectionDelegate(path, self.engine)
         return None
 
     def collection(self, path: str):
-        from PyStore.core._delegates.collection import CollectionDelegate
+        from PyStore._delegates import CollectionDelegate
         return CollectionDelegate(f'{self.path}/{path}', self.engine)
 
     def set(self, data: Json):

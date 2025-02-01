@@ -4,14 +4,14 @@ import abc
 from functools import cached_property
 from typing import TypeVar, Generic, TYPE_CHECKING
 
-from PyStore.core._query.delegate import QueryDelegate
+from .._delegates import QueryDelegate
 from PyStore.types import Json
 from .._delegates import DocumentDelegate
 
 _T = TypeVar('_T')
 
 if TYPE_CHECKING:
-    from .._query.query_document_snapshot import JsonQueryDocumentSnapshot
+    from .document_snapshot import JsonQueryDocumentSnapshot
 
 
 class QuerySnapshot(abc.ABC, Generic[_T]):
@@ -35,7 +35,7 @@ class JsonQuerySnapshot(QuerySnapshot[Json]):
     @cached_property
     def docs(self) -> list[JsonQueryDocumentSnapshot]:
         data = self._delegate.engine.get_collection(self._delegate.path, **self._delegate.kwargs)
-        from .._query.query_document_snapshot import JsonQueryDocumentSnapshot
+        from .document_snapshot import JsonQueryDocumentSnapshot
         return [
             JsonQueryDocumentSnapshot(
                 DocumentDelegate(

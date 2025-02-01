@@ -1,4 +1,9 @@
-from PyStore.engines import PyStoreEngine
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyStore.engines import PyStoreEngine
 
 
 class QueryDelegate:

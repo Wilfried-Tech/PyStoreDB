@@ -22,3 +22,6 @@ class PyStoreTestCase(TestCase):
     def tearDownClass(cls):
         cls.store = None
         PyStore.clear_instances()
+        if cls.store_dir != ':memory:':
+            import shutil
+            shutil.rmtree(cls.store_dir)

@@ -4,10 +4,6 @@ from PyStore.errors import PyStorePathError, PyStoreUnsupportedTypeError
 from PyStore.types import Json, supported_types
 
 
-def dot_path(path: str) -> str:
-    return path.strip('/').replace('/', '.')
-
-
 def path_segments(path: str) -> list[str]:
     return path.strip('/').split('/')
 

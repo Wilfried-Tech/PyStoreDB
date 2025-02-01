@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from PyStore.engines import PyStoreEngine
-from .._query import QueryDelegate
-from ..._utils import generate_uuid
+from typing import TYPE_CHECKING
+
+from PyStore._utils import generate_uuid
+from .query import QueryDelegate
+
+if TYPE_CHECKING:
+    from PyStore.engines import PyStoreEngine
 
 
 class CollectionDelegate(QueryDelegate):
@@ -22,5 +26,5 @@ class CollectionDelegate(QueryDelegate):
         """
         if path is None:
             path = generate_uuid()
-        from PyStore.core._delegates.document import DocumentDelegate
+        from PyStore._delegates import DocumentDelegate
         return DocumentDelegate(f'{self.path}/{path}', self.engine)

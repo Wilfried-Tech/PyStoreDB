@@ -1,8 +1,8 @@
 import abc
 from typing import Generic, TypeVar
 
-from PyStore.core._common import DocumentSnapshot
-from PyStore.core._json_document import JsonDocumentSnapshot
+from PyStore.models import DocumentSnapshot
+from PyStore.models.document import JsonDocumentSnapshot
 from PyStore.types import Json
 
 _T = TypeVar('_T')

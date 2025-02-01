@@ -3,9 +3,9 @@ from __future__ import annotations
 import abc
 from typing import Generic, TypeVar, Any
 
+from PyStore.query import Query
 from PyStore.types import Json
-from ._query import Query
-from ..query import FieldPath
+from PyStore.query import FieldPath
 
 _T = TypeVar('_T')
 

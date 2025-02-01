@@ -4,12 +4,12 @@ import abc
 from typing import TypeVar, Generic, TYPE_CHECKING
 
 from . import FieldPath
-from .query_snapshot import QuerySnapshot
+from .snapshot import QuerySnapshot
 
 _T = TypeVar('_T')
 
 if TYPE_CHECKING:
-    from PyStore.core._common import DocumentSnapshot
+    from PyStore.models import DocumentSnapshot
 
 
 class Query(abc.ABC, Generic[_T]):

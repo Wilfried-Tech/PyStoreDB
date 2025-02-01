@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PyStore.core._common import CollectionReference, DocumentReference
+from PyStore.models import CollectionReference, DocumentReference
+from PyStore.query import JsonQuery
 from PyStore.types import Json
-from ._delegates import CollectionDelegate
-from ._query import JsonQuery
+from .._delegates import CollectionDelegate
 
 if TYPE_CHECKING:
     pass
@@ -22,7 +22,7 @@ class JsonCollectionReference(JsonQuery, CollectionReference[Json]):
         return self._delegate.id
 
     def doc(self, path: str | None = None) -> DocumentReference[Json]:
-        from PyStore.core._json_document import JsonDocumentReference
+        from PyStore.models.document import JsonDocumentReference
         return JsonDocumentReference(self._delegate.doc(path))
 
     def add(self, data: Json) -> DocumentReference[Json]:

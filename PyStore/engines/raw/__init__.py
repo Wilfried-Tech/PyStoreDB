@@ -4,7 +4,7 @@ import os.path
 from typing import Any
 
 from PyStore._utils import validate_data
-from PyStore.engines._engine import PyStoreEngine
+from PyStore.engines.base import PyStoreEngine
 from PyStore.engines.raw import utils
 from PyStore.engines.raw.query import PyStoreRawQuery
 from PyStore.errors import PyStoreKeyError
