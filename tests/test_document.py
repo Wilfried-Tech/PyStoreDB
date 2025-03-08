@@ -78,6 +78,26 @@ class DocumentCRUDTestCase(PyStoreTestCase):
         collection = user.collection('posts')
         self.assertEqual(collection.path, '/users/{}/posts'.format(user.id))
 
+    def test_get_unknown_document(self):
+        user = self.store.collection('users').doc('123')
+        self.assertFalse(user.get().exists)
+        with self.assertWarns(UserWarning):
+            self.assertIsNone(user.get().data)
+        with self.assertWarns(UserWarning):
+            self.assertIsNone(user.get().get('name'))
+
+    def test_delete_unknown_document(self):
+        user = self.store.collection('users').doc('123')
+        self.assertFalse(user.get().exists)
+        with self.assertWarns(UserWarning):
+            user.delete()
+
+    def test_update_unknown_document(self):
+        user = self.store.collection('users').doc('123')
+        self.assertFalse(user.get().exists)
+        with self.assertRaises(PyStorePathError):
+            user.update({'name': 'John'})
+
 
 if __name__ == '__main__':
     unittest.main()

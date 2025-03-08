@@ -1,6 +1,6 @@
 from typing import Any
 
-from PyStore.types import supported_types
+from PyStore.constants import supported_types
 
 
 class PyStoreError(Exception):
@@ -34,22 +34,17 @@ class PyStoreNameError(PyStoreError):
 
 class PyStorePathError(PyStoreError):
     message = 'Invalid Path %s'
+    message_with_segment = 'Invalid Path %s not found segment %s'
 
-    def __init__(self, path: str, message: str = None):
+    def __init__(self, path: str, segment=None, message: str = None):
         self.path = path
+        self.segment = segment
         if message:
             self.message = message
-        super().__init__(self.message % path)
-
-
-class PyStoreKeyError(PyStoreError):
-    message = 'Key %s not found'
-
-    def __init__(self, key: str, message: str = None):
-        self.key = key
-        if message:
-            self.message = message
-        super().__init__(self.message % key)
+        if segment and message is None:
+            super().__init__(self.message_with_segment % (path, segment))
+        else:
+            super().__init__(self.message % (path, segment))
 
 
 class PyStoreUnsupportedTypeError(PyStoreError):

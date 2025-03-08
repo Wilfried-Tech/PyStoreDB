@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import Any
 
 from PyStore._utils import path_segments
-from PyStore.errors import PyStoreKeyError
-from PyStore.types import Json, supported_types
+from PyStore.constants import Json, supported_types
+from PyStore.errors import PyStorePathError
 
 """""
 {
@@ -66,9 +66,18 @@ def get_nested_dict(path: str, data: dict):
     keys = path_segments(path)
     for key in keys:
         if key not in data:
-            raise PyStoreKeyError(key)
+            raise PyStorePathError(path, segment=key)
         data = data[key]
     return data
+
+
+def get_nested_doc_dict(path: str, data: dict):
+    data = get_nested_dict(path, data)
+    if DATA_KEY in data:
+        return {
+            DATA_KEY: data[DATA_KEY]
+        }
+    return {}
 
 
 def load_db(path: str) -> Json:
@@ -133,10 +142,10 @@ def delete_document(path: str, data: Json):
     *paths, _id = path_segments(path)
     for key in paths:
         if key not in data:
-            raise PyStoreKeyError(key)
+            raise PyStorePathError(path, segment=key)
         data = data[key]
     if _id not in data:
-        raise PyStoreKeyError(_id)
+        raise PyStorePathError(path, segment=_id)
     elif DATA_KEY in data[_id]:
         del data[_id][DATA_KEY]
 

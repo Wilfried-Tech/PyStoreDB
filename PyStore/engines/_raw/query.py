@@ -2,22 +2,20 @@ import operator
 from operator import itemgetter
 from typing import Callable, Any
 
-from PyStore.engines import PyStoreEngine
-from PyStore.query import FieldPath
-from PyStore.types import Json
+from PyStore.constants import Json
+from PyStore.core import FieldPath
+from PyStore.core.filters import FilteredQuery
+
+__all__ = ['PyStoreRawQuery']
 
 
 class PyStoreRawQuery:
-    def __init__(self, engine: PyStoreEngine):
-        self.engine = engine
 
     def apply_query_filters(self, data: dict[str, Json], **kwargs):
+        if 'filters' in kwargs:
+            data = self._filter(data, kwargs.pop('filters'))
         if 'order_by' in kwargs:
             data = self._order_by(data, kwargs['order_by'])
-        if 'limit' in kwargs:
-            data = dict(list(data.items())[:kwargs.pop('limit')])
-        elif 'limit_to_last' in kwargs:
-            data = dict(list(data.items())[-kwargs.pop('limit_to_last'):])
         if 'start_at' in kwargs:
             data = self._by_cursor_value(
                 data, kwargs['order_by'], kwargs.pop('start_at'),
@@ -38,6 +36,10 @@ class PyStoreRawQuery:
                 data, kwargs['order_by'], kwargs.pop('end_before'),
                 operator.lt, kwargs.pop('is_doc_cursor')
             )
+        if 'limit' in kwargs:
+            data = dict(list(data.items())[:kwargs.pop('limit')])
+        elif 'limit_to_last' in kwargs:
+            data = dict(list(data.items())[-kwargs.pop('limit_to_last'):])
 
         return data
 
@@ -107,4 +109,9 @@ class PyStoreRawQuery:
                 elif op == operator.le:
                     return dict(data[:index + 1])
                 break
+        return dict(data)
+
+    def _filter(self, data, filters):
+        data = self.to_data_list(data)
+        data = FilteredQuery(data, filters)
         return dict(data)

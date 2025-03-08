@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from PyStore.constants import Json, supported_types
 from PyStore.errors import PyStorePathError, PyStoreUnsupportedTypeError
-from PyStore.types import Json, supported_types
 
 
 def path_segments(path: str) -> list[str]:

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any
 
-from PyStore.query.field_path import FieldPath
-from PyStore.types import Json
-from .._delegates import QueryDelegate
-from .query import Query
-from .snapshot import QuerySnapshot, JsonQuerySnapshot
+from PyStore._delegates import QueryDelegate
+from PyStore.constants import Json
+from PyStore.core import Query, QuerySnapshot, FieldPath, DocumentSnapshot
 
-__all__ = ['Query', 'QuerySnapshot', 'JsonQuery', 'JsonQuerySnapshot', 'QueryDelegate', 'FieldPath']
+__all__ = ['JsonQuery']
 
-# if TYPE_CHECKING:
-#     from .._common import DocumentSnapshot
+from PyStore.core.aggregate import Aggregation
+
+from PyStore.core.filters import Q
 
 
 class JsonQuery(Query[Json]):
@@ -20,6 +19,7 @@ class JsonQuery(Query[Json]):
         return self.get().size
 
     def get(self) -> QuerySnapshot[Json]:
+        from PyStore._impl import JsonQuerySnapshot
         return JsonQuerySnapshot(self._delegate)
 
     def limit(self, limit: int) -> JsonQuery[Json]:
@@ -89,11 +89,22 @@ class JsonQuery(Query[Json]):
         orders, values = self._assert_query_cursor_snapshot(document)
         return JsonQuery(self._delegate.end_before_document(orders, values))
 
-    def where(self, **kwargs) -> JsonQuery[Json]:
-        pass
+    def where(self, *args, **kwargs) -> JsonQuery[Json]:
+        _filters = list(self._kwargs.get('filters', []))
+        _filters.extend([Q(*args, **kwargs)])
+        return JsonQuery(self._delegate.where(_filters))
 
-    def aggregate(self, *args) -> JsonQuery[Json]:
-        pass
+    def exclude(self, *args, **kwargs) -> JsonQuery[Json]:
+        _filters = list(self._kwargs.get('filters', []))
+        _filters.extend([Q(*args, **kwargs, negated=True)])
+        return JsonQuery(self._delegate.where(_filters))
+
+    def aggregate(self, mapping: dict[str, Aggregation] = None, **kwargs) -> dict[str, Any]:
+        if mapping is None:
+            mapping = {}
+        mapping = {**mapping, **kwargs}
+        data = self.get().docs
+        return {key: aggregation.apply(data) for key, aggregation in mapping.items()}
 
     def __init__(self, query_delegate: QueryDelegate):
         self._delegate = query_delegate
@@ -117,9 +128,9 @@ class JsonQuery(Query[Json]):
             'Too many arguments provided. ' \
             'The number of arguments must be less than or equal to the number of order_by() clauses.'
 
-    def _assert_query_cursor_snapshot(self, snapshot: DocumentSnapshot) -> tuple[list, list]:
-        assert snapshot.exists, 'Invalid query. The document must exist to be used in a query'
-        assert snapshot.reference.parent.path == self._delegate.path, 'Invalid query. The document must belong to the same collection as the query'
+    def _assert_query_cursor_snapshot(self, _snapshot: DocumentSnapshot) -> tuple[list, list]:
+        assert _snapshot.exists, 'Invalid query. The document must exist to be used in a query'
+        assert _snapshot.reference.parent.path == self._delegate.path, 'Invalid query. The document must belong to the same collection as the query'
 
         orders = list(self._kwargs.get('order_by', list()))
         values = []
@@ -127,7 +138,7 @@ class JsonQuery(Query[Json]):
         for order in orders:
             if order[0] != FieldPath.document_id:
                 try:
-                    value = snapshot.get(str(order[0]))
+                    value = _snapshot.get(str(order[0]))
                     if value is None:
                         raise KeyError
                     values.append(value)  # TODO check this when support map and list lookup
@@ -145,6 +156,6 @@ class JsonQuery(Query[Json]):
         else:
             orders.append((FieldPath.document_id, False))
 
-        values.append(snapshot.id)
+        values.append(_snapshot.id)
 
         return orders, values

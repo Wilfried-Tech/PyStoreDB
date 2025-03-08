@@ -4,13 +4,15 @@ import os
 import threading
 
 from PyStore.conf import DEFAULT_STORE_NAME, PyStoreSettings
+from PyStore.core import CollectionReference, DocumentReference
 from PyStore.engines import PyStoreEngine
 from PyStore.errors import PyStoreNameError, PyStoreInitialisationError
-from PyStore.models import JsonCollectionReference, JsonDocumentReference
 from ._delegates import StoreDelegate
 
 __all__ = ['PyStore']
 __version__ = '1.0.0'
+
+from .constants import Json
 
 
 class _PyStoreMeta(type):
@@ -79,10 +81,12 @@ class PyStore(metaclass=_PyStoreMeta):
         self.name = name
         self._delegate = delegate
 
-    def collection(self, path: str) -> JsonCollectionReference:
+    def collection(self, path: str) -> CollectionReference[Json]:
+        from ._impl import JsonCollectionReference
         return JsonCollectionReference(self._delegate.collection(path))
 
-    def doc(self, path: str) -> JsonDocumentReference:
+    def doc(self, path: str) -> DocumentReference[Json]:
+        from ._impl import JsonDocumentReference
         return JsonDocumentReference(self._delegate.doc(path))
 
     def clear(self):

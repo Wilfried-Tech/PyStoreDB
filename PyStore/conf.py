@@ -6,6 +6,7 @@ DEFAULT_STORE_NAME = 'default'
 
 __all__ = ['PyStoreSettings', 'DEFAULT_STORE_NAME']
 
+
 class PyStoreSettings:
 
     def __init__(self, store_dir: str = 'store', engine_class: PyStoreEngine = PyStoreRawEngine):

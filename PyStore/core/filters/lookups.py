@@ -1,11 +1,17 @@
 import abc
 import operator
+import re
 from typing import Type
 
-from PyStore.types import supported_types
+from PyStore.constants import supported_types
+
+__all__ = [
+    'Lookup',
+    'lookup_registry',
+]
 
 
-class _LookupRegistry:
+class __LookupRegistry:
     def __init__(self):
         self.__registry: dict[type, dict[str, Type[Lookup]]] = {}
 
@@ -15,12 +21,9 @@ class _LookupRegistry:
         def decorator(lookup_cls):
             if not issubclass(lookup_cls, Lookup):
                 raise TypeError(f'{lookup_cls} must be a subclass of {Lookup.__name__}')
-            if not field_types:  # Si aucun type n'est fourni, enregistrer pour tous les types
-                for field_type in supported_types:
-                    self._add_lookup(field_type, lookup_cls)
-            else:
-                for field_type in field_types:
-                    self._add_lookup(field_type, lookup_cls)
+            types = field_types or supported_types
+            for field_type in types:
+                self._add_lookup(field_type, lookup_cls)
             return lookup_cls  # Retourner la classe originale
 
         if field_types and issubclass(field_types[0], Lookup):
@@ -30,20 +33,19 @@ class _LookupRegistry:
 
     def _add_lookup(self, field_type, lookup_cls):
         """Ajoute un lookup pour un type spécifique."""
-        if field_type not in self.__registry:
-            self.__registry[field_type] = {}
-        self.__registry[field_type][lookup_cls.lookup_name] = lookup_cls
+        self.__registry.setdefault(field_type, {})[lookup_cls.lookup_name] = lookup_cls
 
     def get_lookup(self, field_type, lookup_name, field_value, lookup_value):
         """Récupère le lookup en tenant compte du préfixe 'i' pour les chaînes."""
         case_sensitive = True
 
-        if lookup_name.startswith("i") and field_type == str and lookup_name[1:] in self.__registry.get(str, {}):
+        # print(field_type, lookup_name, field_value, lookup_value)
+
+        if (lookup_name.startswith("i") and len(lookup_name[1:]) > 1 and
+                field_type == str and lookup_name[1:] in self.__registry.get(str, {})):
             lookup_name = lookup_name[1:]  # Retire le 'i'
             case_sensitive = False
-
-        lookup_cls = self.__registry.get(field_type, {}).get(lookup_name, None)
-
+        lookup_cls = self.__registry.get(field_type, dict()).get(lookup_name, None)
         if lookup_cls:
             return lookup_cls(field_value, lookup_value, case_sensitive)
         return None  # Lookup non trouvé
@@ -52,12 +54,14 @@ class _LookupRegistry:
 class Lookup(abc.ABC):
     lookup_name = None
 
-    def __init__(self, db_value, value, sensitive=False):
+    def __init__(self, db_value, value, case_sensitive=True):
+        self.case_sensitive = case_sensitive
+        self.db_value = db_value
+        self.value = value
         self.db_value = self.prepare_db_value(db_value)
         self.value = self.prepare_value(value)
-        self.sensitive = sensitive
         self.prepare_lookup()
-        if self.lookup_name is None
+        if self.lookup_name is None:
             raise ValueError('lookup_name attribute must be set')
 
     def prepare_lookup(self):
@@ -78,14 +82,15 @@ class Lookup(abc.ABC):
         return self.as_bool
 
 
-lookup_registry = _LookupRegistry()
+lookup_registry = __LookupRegistry()
 
 
 class BuiltinLookup(Lookup):
     _op = None
 
+    @property
     def as_bool(self):
-        op = self._op or getattr(operator, self.lookup_name[1:] if self.sensitive else self.lookup_name, None)
+        op = self._op or getattr(operator, self.lookup_name, None)
         if op is None:
             raise NotImplementedError(f"Operator {self.lookup_name} not implemented")
         return op(self.db_value, self.value)
@@ -113,39 +118,35 @@ class GreaterThanEqual(BuiltinLookup):
     lookup_name = 'gte'
 
 
-class StrPrepareMixin(Lookup, abc.ABC):
+class StrPrepareMixin:
     def prepare_db_value(self, db_value):
         if isinstance(db_value, str):
-            return str(db_value).lower() if self.sensitive else str(db_value)
+            return str(db_value) if self.case_sensitive else str(db_value).lower()
         return db_value
 
     def prepare_value(self, value):
         if isinstance(value, str):
-            return str(value).lower() if self.sensitive else str(value)
+            return str(value) if self.case_sensitive else str(value).lower()
         return value
 
 
 @lookup_registry.register
-class Exact(BuiltinLookup, StrPrepareMixin):
+class Exact(StrPrepareMixin, BuiltinLookup):
     _op = operator.eq
     lookup_name = 'exact'
 
 
-@lookup_registry.register
-class IExact(Exact):
-    lookup_name = 'iexact'
-
-
-class PrepareListValueMixin:
+class PrepareListValueMixin(StrPrepareMixin):
 
     def prepare_list_value(self):
-        values = list(self.value)
-        return values # TODO evaluate values
+        values = list(map(self.prepare_value, self.value))
+        return values  # TODO evaluate values for potential F expressions
+
 
 @lookup_registry.register
-class In(BuiltinLookup, PrepareListValueMixin):
+class In(PrepareListValueMixin, BuiltinLookup):
     lookup_name = 'in'
-        
+
     @property
     def as_bool(self):
         return self.db_value in self.prepare_list_value()
@@ -156,39 +157,65 @@ class IsNull(BuiltinLookup):
     lookup_name = 'isnull'
 
     @property
-    def  as_bool(self):
+    def as_bool(self):
         if not isinstance(self.value, bool):
             raise ValueError('Value must be a boolean')
         return self.db_value is None if self.value else self.db_value is not None
 
 
-class BuiltinStrLookup(Lookup):
-    case_sensitive = True
-    pass
+class PatternLookup(Lookup):
+    pattern: str | re.Pattern[str] = None
+
+    def prepare_lookup(self):
+        self.value = str(self.value)
+        self.db_value = str(self.db_value)
+
+    @property
+    def as_bool(self):
+        if self.pattern is None:
+            raise ValueError('pattern attribute must be specified')
+        flag = 0 if self.case_sensitive else re.IGNORECASE
+        pattern = self.pattern if isinstance(self.pattern, re.Pattern) else re.compile(
+            self.pattern % (re.escape(self.value),)
+        )
+        return bool(re.search(pattern, self.db_value, flags=flag))
 
 
-@str_lookup
-class StartsWith(BuiltinStrLookup):
+@lookup_registry.register
+class StartsWith(PatternLookup):
     lookup_name = "startswith"
-
-    def __call__(self, db_value, value, sensitive=False):
-        return str(db_value).startswith(value) if sensitive else str(db_value).lower().startswith(value.lower())
+    pattern = '^%s'
 
 
-@str_lookup
-class EndsWith(BuiltinStrLookup):
+@lookup_registry.register
+class EndsWith(PatternLookup):
     lookup_name = "endswith"
-
-    def __call__(self, db_value, value, sensitive=False):
-        return str(db_value).endswith(value) if sensitive else str(db_value).lower().endswith(value.lower())
+    pattern = '%s$'
 
 
-@LookupRegistry.register(str, list, dict)
-class Contains(BuiltinLookup):
+@lookup_registry.register
+class Contains(PatternLookup):
     lookup_name = "contains"
-    case_sensitive = True
+    pattern = '%s'
 
-    def __call__(self, db_value, value, sensitive=False):
-        if isinstance(db_value, str) and isinstance(value, str) and sensitive:
-            return value.lower() in db_value.lower()
-        return value in db_value
+
+@lookup_registry.register
+class Regex(PatternLookup):
+    lookup_name = 'regex'
+
+    def prepare_value(self, value):
+        assert isinstance(value, (str, re.Pattern)), f'{value} must be str or Pattern'
+        self.pattern = value if isinstance(value, re.Pattern) else re.compile(value)
+        return super().prepare_value(value)
+
+
+@lookup_registry.register
+class Range(Lookup, PrepareListValueMixin):
+
+    def prepare_value(self, value):
+        assert isinstance(value, (list, tuple, set)), ''
+        assert len(value) == 2, ''
+
+    @property
+    def as_bool(self) -> bool:
+        return self.value[0] <= self.value[0] <= self.db_value
