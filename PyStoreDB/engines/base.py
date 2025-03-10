@@ -3,17 +3,17 @@ from __future__ import annotations
 import abc
 from typing import Any
 
-from PyStore.constants import Json
-from PyStore.core import FieldPath
+from PyStoreDB.constants import Json
+from PyStoreDB.core import FieldPath
 
-__all__ = ['PyStoreEngine']
+__all__ = ['PyStoreDBEngine']
 
 
-class PyStoreEngine(abc.ABC):
+class PyStoreDBEngine(abc.ABC):
 
     def __init__(self, store_name: str, **kwargs):
         """
-        :type store PyStoreEngine
+        :type store PyStoreDBEngine
         """
         self.store_name = store_name
 
@@ -21,7 +21,7 @@ class PyStoreEngine(abc.ABC):
     def store(self):
         """
         Get the store object
-        :rtype: PyStore.PyStore
+        :rtype: PyStoreDB.PyStoreDB
         """
         return getattr(self, '_store', None)
 

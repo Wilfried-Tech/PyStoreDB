@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import abc
-from typing import Generic, TypeVar, Any
+from typing import Generic, TypeVar, Any, Callable
 
-from PyStore.constants import Json
-from PyStore.core.filters import __all__ as _filters_all
+from PyStoreDB.constants import Json
+from PyStoreDB.core.filters import __all__ as _filters_all
 from .field_path import FieldPath
 from .query import Query, QuerySnapshot
 
 _T = TypeVar('_T')
+_U = TypeVar('_U')
 
 __all__ = [
     'StoreObject',
@@ -22,8 +23,6 @@ __all__ = [
     *_filters_all,
 ]
 
-
-# TODO: implement with converter
 
 class StoreObject(abc.ABC):
     """
@@ -51,7 +50,7 @@ class StoreObject(abc.ABC):
         pass
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, StoreObject):
+        if not isinstance(other, self.__class__):
             return False
         return self.path == other.path and self.id == other.id
 
@@ -75,7 +74,11 @@ class CollectionReference(StoreObject, Query[_T], Generic[_T]):
         pass
 
     @abc.abstractmethod
-    def doc(self, key: str) -> DocumentReference[_T]:
+    def doc(self, path: str = None) -> DocumentReference[_T]:
+        pass
+
+    @abc.abstractmethod
+    def with_converter(self, from_json: Callable[[_T], _U], to_json: Callable[[_U], _T]) -> CollectionReference[_U]:
         pass
 
 
@@ -139,7 +142,6 @@ class DocumentSnapshot(abc.ABC, Generic[_T]):
         data = self.data
         if isinstance(data, dict):
             return f'<{self.__class__.__name__} {data}>'
-        print(data)
         return str(data)
 
 
@@ -177,7 +179,7 @@ class DocumentReference(StoreObject, Generic[_T]):
         pass
 
     @abc.abstractmethod
-    def update(self, data: Json, **kwargs) -> None:
+    def update(self, data: Json = None, **kwargs) -> None:
         pass
 
     @abc.abstractmethod

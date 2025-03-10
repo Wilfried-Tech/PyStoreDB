@@ -3,52 +3,52 @@ from __future__ import annotations
 import os
 import threading
 
-from PyStore.conf import DEFAULT_STORE_NAME, PyStoreSettings
-from PyStore.core import CollectionReference, DocumentReference
-from PyStore.engines import PyStoreEngine
-from PyStore.errors import PyStoreNameError, PyStoreInitialisationError
+from PyStoreDB.conf import DEFAULT_STORE_NAME, PyStoreDBSettings
+from PyStoreDB.core import CollectionReference, DocumentReference
+from PyStoreDB.engines import PyStoreDBEngine
+from PyStoreDB.errors import PyStoreDBNameError, PyStoreDBInitialisationError
 from ._delegates import StoreDelegate
 
-__all__ = ['PyStore']
+__all__ = ['PyStoreDB']
 __version__ = '1.0.0'
 
 from .constants import Json
 
 
-class _PyStoreMeta(type):
-    __instances: dict[str, PyStore] = {}
+class _PyStoreDBMeta(type):
+    __instances: dict[str, PyStoreDB] = {}
     __lock = threading.Lock()
-    __settings = PyStoreSettings()
+    __settings = PyStoreDBSettings()
 
     @property
     def settings(cls):
         return cls.__settings
 
     @settings.setter
-    def settings(cls, setting: PyStoreSettings):
+    def settings(cls, setting: PyStoreDBSettings):
         cls.__settings = setting
 
     def __call__(cls, *args, **kwargs):
         raise ValueError(f"{cls.__name__} is not instantiable use get_instance instead")
 
-    def destroy_instance(cls, name: str):
+    def close_instance(cls, name: str):
         return cls.__instances.pop(name)
 
     def clear_instances(cls):
         cls.__instances = {}
 
-    def get_instance(cls, name: str = DEFAULT_STORE_NAME, *args, **kwargs) -> PyStore:
+    def get_instance(cls, name: str = DEFAULT_STORE_NAME, *args, **kwargs) -> PyStoreDB:
         """
-        Create or get an instance of PyStore from name of store
+        Create or get an instance of PyStoreDB from name of store
         :param name: name of store
         """
         with cls.__lock:
             if name == '':
                 name = DEFAULT_STORE_NAME
             if not cls.is_initialised:
-                raise PyStoreInitialisationError('PyStore is not initialized')
+                raise PyStoreDBInitialisationError('PyStoreDB is not initialized')
             if not name.isalnum():
-                raise PyStoreNameError(name)
+                raise PyStoreDBNameError(name)
             if name not in cls.__instances:
                 engine = cls.settings.engine_class(name)
                 delegate = StoreDelegate(engine)
@@ -59,13 +59,13 @@ class _PyStoreMeta(type):
             return cls.__instances[name]
 
     @staticmethod
-    def _initialize_store(engine: PyStoreEngine, instance: PyStore):
+    def _initialize_store(engine: PyStoreDBEngine, instance: PyStoreDB):
         setattr(engine, '_store', instance)
         engine.initialize()
 
     def initialize(cls) -> None:
         if cls.is_initialised:
-            raise PyStoreInitialisationError
+            raise PyStoreDBInitialisationError
         if cls.settings.store_dir is not None:
             os.makedirs(cls.settings.store_dir, exist_ok=True)
         setattr(cls, '__initialised', True)
@@ -75,7 +75,7 @@ class _PyStoreMeta(type):
         return hasattr(cls, '__initialised')
 
 
-class PyStore(metaclass=_PyStoreMeta):
+class PyStoreDB(metaclass=_PyStoreDBMeta):
 
     def __init__(self, name: str, delegate: StoreDelegate):
         self.name = name
@@ -92,11 +92,19 @@ class PyStore(metaclass=_PyStoreMeta):
     def clear(self):
         self._delegate.engine.clear()
 
-    def destroy(self):
-        self.__class__.destroy_instance(self.name)
+    def close(self):
+        self.__class__.close_instance(self.name)
 
     def get_raw_data(self, path: str = '') -> dict:
+        """
+        Get raw data at path of store
+        Args:
+            path: path of an
+
+        Returns:
+
+        """
         return self._delegate.engine.get_raw(path)
 
     def __repr__(self):
-        return f"<PyStore name={self.name}>"
+        return f"<PyStoreDB name={self.name}>"

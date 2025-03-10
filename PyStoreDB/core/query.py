@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import abc
-from typing import TypeVar, Generic, TYPE_CHECKING, Any
+from typing import TypeVar, Generic, TYPE_CHECKING, Any, Callable
 
 from . import FieldPath
 
 _T = TypeVar('_T')
+_U = TypeVar('_U')
 
 if TYPE_CHECKING:
     from . import DocumentSnapshot, QueryDocumentSnapshot
@@ -91,6 +92,10 @@ class Query(abc.ABC, Generic[_T]):
 
     @abc.abstractmethod
     def aggregate(self, *args) -> dict[str, Any]:
+        pass
+
+    @abc.abstractmethod
+    def with_converter(self, from_json: Callable[[_T], _U], to_json: Callable[[_U], _T]) -> Query[_U]:
         pass
 
 

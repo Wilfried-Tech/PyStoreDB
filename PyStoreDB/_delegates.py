@@ -3,19 +3,19 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from PyStore._utils import is_valid_document, validate_path, is_valid_collection, generate_uuid, parent_path
-from PyStore.constants import Json
-from PyStore.core import FieldPath
+from PyStoreDB._utils import is_valid_document, validate_path, is_valid_collection, generate_uuid, parent_path
+from PyStoreDB.constants import Json
+from PyStoreDB.core import FieldPath
 
 if TYPE_CHECKING:
-    from PyStore.engines import PyStoreEngine
+    from PyStoreDB.engines import PyStoreDBEngine
 
 __all__ = ['StoreDelegate', 'CollectionDelegate', 'DocumentDelegate', 'QueryDelegate']
 
 
 class StoreDelegate:
 
-    def __init__(self, engine: PyStoreEngine):
+    def __init__(self, engine: PyStoreDBEngine):
         self.engine = engine
 
     def collection(self, path: str) -> CollectionDelegate:
@@ -33,11 +33,12 @@ class StoreDelegate:
         return DocumentDelegate(path, self.engine)
 
 
-class DocumentDelegate:
+class DocumentDelegate(StoreDelegate):
+    doc = None
 
-    def __init__(self, path: str, engine: PyStoreEngine):
+    def __init__(self, path: str, engine: PyStoreDBEngine):
+        super().__init__(engine)
         self.path = path
-        self.engine = engine
 
     @property
     def id(self):
@@ -50,12 +51,7 @@ class DocumentDelegate:
     @property
     def parent(self):
         path = parent_path(self.path)
-        if path:
-            return CollectionDelegate(path, self.engine)
-        return None
-
-    def collection(self, path: str):
-        return CollectionDelegate(f'{self.path}/{path}', self.engine)
+        return CollectionDelegate(path, self.engine)
 
     def set(self, data: Json):
         self.engine.set(self.path, data)
@@ -74,6 +70,8 @@ class DocumentDelegate:
 
     def get_field(self, field: str | FieldPath, default=None) -> Any:
         if self.exists:
+            if field == FieldPath.document_id:
+                return self.id
             return self.engine.get_field(self.path, field, default)
         warnings.warn(f"Document {self.path} does not exist")
         return default
@@ -85,10 +83,13 @@ class DocumentDelegate:
         warnings.warn(f"Document {self.path} does not exist")
         return None
 
+    def collection(self, path: str) -> CollectionDelegate:
+        return super().collection(f"{self.path}/{path}")
+
 
 class QueryDelegate:
 
-    def __init__(self, path: str, engine: PyStoreEngine, **kwargs):
+    def __init__(self, path: str, engine: PyStoreDBEngine, **kwargs):
         self.path = path
         self.engine = engine
         self.kwargs = kwargs
@@ -136,10 +137,11 @@ class QueryDelegate:
         return self._copy(filters=filters)
 
 
-class CollectionDelegate(QueryDelegate):
+class CollectionDelegate(QueryDelegate, StoreDelegate):
 
-    def __init__(self, path: str, engine: PyStoreEngine):
-        super().__init__(path, engine)
+    def __init__(self, path: str, engine: PyStoreDBEngine):
+        QueryDelegate.__init__(self, path, engine)
+        StoreDelegate.__init__(self, engine)
 
     @property
     def id(self):
@@ -148,4 +150,6 @@ class CollectionDelegate(QueryDelegate):
     def doc(self, path: str | None):
         if path is None:
             path = generate_uuid()
-        return DocumentDelegate(f'{self.path}/{path}', self.engine)
+        return super().doc(f'{self.path}/{path}')
+
+    collection = None

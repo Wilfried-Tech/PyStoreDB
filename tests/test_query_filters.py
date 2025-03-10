@@ -1,12 +1,12 @@
 import unittest
 
-from PyStore.constants import Json
-from PyStore.core import QuerySnapshot
-from PyStore.core.filters import Q, F
-from PyStore.test import PyStoreTestCase
+from PyStoreDB.constants import Json
+from PyStoreDB.core import QuerySnapshot
+from PyStoreDB.core.filters import Q, F
+from PyStoreDB.test import PyStoreDBTestCase
 
 
-class FiltersTestCase(PyStoreTestCase):
+class FiltersTestCase(PyStoreDBTestCase):
 
     def assertQueryContains(self, query: QuerySnapshot[Json], subset: Json, msg=None):
         self.assertTrue(any(
@@ -65,7 +65,6 @@ class FiltersTestCase(PyStoreTestCase):
 
         query = self.filter(~Q(name='John'), age__lt=30)
         self.assertEqual(len(query), 1)
-        print(query)
         self.assertQueryContains(query, {'name': 'Jane', 'age': 20})
 
     def test_filter_or(self):
@@ -95,7 +94,7 @@ class FiltersTestCase(PyStoreTestCase):
 
     def test_filter_inexistant_field(self):
         with self.assertRaises(ValueError, msg='Field `email` does not exist'):
-            docs = self.filter(email='john@pystore.com').docs
+            docs = self.filter(email='john@pystoredb.com').docs
 
     def setUp(self):
         super().setUp()

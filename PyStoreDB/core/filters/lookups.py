@@ -3,7 +3,7 @@ import operator
 import re
 from typing import Type
 
-from PyStore.constants import supported_types
+from PyStoreDB.constants import supported_types
 
 __all__ = [
     'Lookup',
@@ -38,9 +38,6 @@ class __LookupRegistry:
     def get_lookup(self, field_type, lookup_name, field_value, lookup_value):
         """Récupère le lookup en tenant compte du préfixe 'i' pour les chaînes."""
         case_sensitive = True
-
-        # print(field_type, lookup_name, field_value, lookup_value)
-
         if (lookup_name.startswith("i") and len(lookup_name[1:]) > 1 and
                 field_type == str and lookup_name[1:] in self.__registry.get(str, {})):
             lookup_name = lookup_name[1:]  # Retire le 'i'

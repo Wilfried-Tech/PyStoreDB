@@ -1,7 +1,7 @@
 import abc
 import statistics
 
-from PyStore.core import FieldPath, QueryDocumentSnapshot
+from PyStoreDB.core import FieldPath, QueryDocumentSnapshot
 
 
 class Aggregation(abc.ABC):
@@ -22,7 +22,7 @@ class Aggregation(abc.ABC):
         self.field_name = field_name if isinstance(field_name, FieldPath) else FieldPath(field_name)
 
     @abc.abstractmethod
-    def apply(self, docs):
+    def apply(self, docs: list[QueryDocumentSnapshot]) -> int | float | None:
         pass
 
     def get_numeric_values(self, docs: list[QueryDocumentSnapshot]) -> list[int | float]:

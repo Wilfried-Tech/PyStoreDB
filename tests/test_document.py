@@ -1,10 +1,10 @@
 import unittest
 
-from PyStore.errors import PyStorePathError
-from PyStore.test import PyStoreTestCase
+from PyStoreDB.errors import PyStoreDBPathError
+from PyStoreDB.test import PyStoreDBTestCase
 
 
-class DocumentCRUDTestCase(PyStoreTestCase):
+class DocumentCRUDTestCase(PyStoreDBTestCase):
 
     def test_create(self):
         user = self.store.collection('users').doc()
@@ -71,7 +71,7 @@ class DocumentCRUDTestCase(PyStoreTestCase):
         self.assertEqual(user.id, '1234')
 
     def test_invalid_document_path(self):
-        self.assertRaises(PyStorePathError, self.store.doc, 'users/1234/1234')
+        self.assertRaises(PyStoreDBPathError, self.store.doc, 'users/1234/1234')
 
     def test_collection(self):
         user = self.store.collection('users').doc()
@@ -95,7 +95,7 @@ class DocumentCRUDTestCase(PyStoreTestCase):
     def test_update_unknown_document(self):
         user = self.store.collection('users').doc('123')
         self.assertFalse(user.get().exists)
-        with self.assertRaises(PyStorePathError):
+        with self.assertRaises(PyStoreDBPathError):
             user.update({'name': 'John'})
 
 

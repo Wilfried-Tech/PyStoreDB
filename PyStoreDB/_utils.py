@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from PyStore.constants import Json, supported_types
-from PyStore.errors import PyStorePathError, PyStoreUnsupportedTypeError
+from PyStoreDB.constants import Json, supported_types
+from PyStoreDB.errors import PyStoreDBPathError, PyStoreDBUnsupportedTypeError
 
 
 def path_segments(path: str) -> list[str]:
@@ -10,28 +10,28 @@ def path_segments(path: str) -> list[str]:
 
 def validate_path(path: str, partial=False) -> None:
     if not path:
-        raise PyStorePathError(path, 'path "%s" cannot be empty')
+        raise PyStoreDBPathError(path, 'path "%s" cannot be empty')
     if not path.startswith('/') and not partial:
-        raise PyStorePathError(path, 'path "%s" must start with /')
+        raise PyStoreDBPathError(path, 'path "%s" must start with /')
     if path.endswith('/'):
-        raise PyStorePathError(path, 'path "%s" must not end with /')
+        raise PyStoreDBPathError(path, 'path "%s" must not end with /')
     if '//' in path:
-        raise PyStorePathError(path, 'path "%s" must not contain //')
+        raise PyStoreDBPathError(path, 'path "%s" must not contain //')
     if not all([x.isalnum() for x in path.strip('/').split('/')]):
-        raise PyStorePathError(path, 'path "%s" must be alphanumeric')
+        raise PyStoreDBPathError(path, 'path "%s" must be alphanumeric')
 
 
 def is_valid_document(path: str, throw_error=True) -> bool:
     check = len(path.strip('/').split('/')) % 2 == 0
     if not check and throw_error:
-        raise PyStorePathError(path, "'%s' doesn't point to a document")
+        raise PyStoreDBPathError(path, "'%s' doesn't point to a document")
     return check
 
 
 def is_valid_collection(path: str, throw_error=True) -> bool:
     check = len(path.strip('/').split('/')) % 2 == 1
     if not check and throw_error:
-        raise PyStorePathError(path, "'%s' doesn't point to a collection")
+        raise PyStoreDBPathError(path, "'%s' doesn't point to a collection")
     return check
 
 
@@ -44,7 +44,7 @@ def parent_path(path: str) -> str | None:
 
 def validate_data_value(value):
     if type(value) not in supported_types:
-        raise PyStoreUnsupportedTypeError(value)
+        raise PyStoreDBUnsupportedTypeError(value)
     if type(value) is list:
         for list_value in value:
             validate_data_value(list_value)

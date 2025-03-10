@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypeVar
 
-from PyStore._delegates import QueryDelegate
-from PyStore.constants import Json
-from PyStore.core import Query, QuerySnapshot, FieldPath, DocumentSnapshot
+from PyStoreDB._delegates import QueryDelegate
+from PyStoreDB._impl import ToPyStoreDB, FromPyStoreDB
+from PyStoreDB.constants import Json
+from PyStoreDB.core import Query, QuerySnapshot, FieldPath, DocumentSnapshot
+from PyStoreDB.core.aggregate import Aggregation
+from PyStoreDB.core.filters import Q
 
 __all__ = ['JsonQuery']
 
-from PyStore.core.aggregate import Aggregation
-
-from PyStore.core.filters import Q
+_T = TypeVar('_T')
 
 
 class JsonQuery(Query[Json]):
@@ -19,7 +20,7 @@ class JsonQuery(Query[Json]):
         return self.get().size
 
     def get(self) -> QuerySnapshot[Json]:
-        from PyStore._impl import JsonQuerySnapshot
+        from PyStoreDB._impl import JsonQuerySnapshot
         return JsonQuerySnapshot(self._delegate)
 
     def limit(self, limit: int) -> JsonQuery[Json]:
@@ -105,6 +106,10 @@ class JsonQuery(Query[Json]):
         mapping = {**mapping, **kwargs}
         data = self.get().docs
         return {key: aggregation.apply(data) for key, aggregation in mapping.items()}
+
+    def with_converter(self, from_json: FromPyStoreDB[_T], to_json: ToPyStoreDB[_T]) -> Query[_T]:
+        from PyStoreDB._impl.converter import WithConverterQuery
+        return WithConverterQuery(self, from_json, to_json)
 
     def __init__(self, query_delegate: QueryDelegate):
         self._delegate = query_delegate

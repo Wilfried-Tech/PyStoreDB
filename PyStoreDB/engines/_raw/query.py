@@ -2,14 +2,14 @@ import operator
 from operator import itemgetter
 from typing import Callable, Any
 
-from PyStore.constants import Json
-from PyStore.core import FieldPath
-from PyStore.core.filters import FilteredQuery
+from PyStoreDB.constants import Json
+from PyStoreDB.core import FieldPath
+from PyStoreDB.core.filters import FilteredQuery
 
-__all__ = ['PyStoreRawQuery']
+__all__ = ['PyStoreDBRawQuery']
 
 
-class PyStoreRawQuery:
+class PyStoreDBRawQuery:
 
     def apply_query_filters(self, data: dict[str, Json], **kwargs):
         if 'filters' in kwargs:
@@ -77,7 +77,7 @@ class PyStoreRawQuery:
     @staticmethod
     def _filter_by_key_value_func(field: FieldPath, op: Callable, value):
         def key_func(item):
-            db_value = PyStoreRawQuery._get_field_value(field)(item)
+            db_value = PyStoreDBRawQuery._get_field_value(field)(item)
             assert type(db_value) is type(value), ('value type of fields in order_by clauses must match in order '
                                                    'values in start_after(), start_at(), end_before(), end_at()')
             return op(db_value, value)

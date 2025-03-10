@@ -1,10 +1,10 @@
 import unittest
 from datetime import datetime
 
-from PyStore.test import PyStoreTestCase
+from PyStoreDB.test import PyStoreDBTestCase
 
 
-class CollectionQueryTestCase(PyStoreTestCase):
+class CollectionQueryTestCase(PyStoreDBTestCase):
 
     def setUp(self):
         super().setUp()

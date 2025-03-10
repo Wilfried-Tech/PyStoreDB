@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any
+from typing import Any, TypeVar
 
-from PyStore._delegates import DocumentDelegate, CollectionDelegate, QueryDelegate
-from PyStore._impl.query import JsonQuery
-from PyStore.constants import Json
-from PyStore.core import DocumentReference, DocumentSnapshot, CollectionReference, FieldPath, QuerySnapshot
+from PyStoreDB._delegates import DocumentDelegate, CollectionDelegate, QueryDelegate
+from PyStoreDB._impl.converter import FromPyStoreDB, ToPyStoreDB
+from PyStoreDB._impl.query import JsonQuery
+from PyStoreDB.constants import Json
+from PyStoreDB.core import (
+    DocumentReference,
+    DocumentSnapshot,
+    CollectionReference,
+    FieldPath,
+    QueryDocumentSnapshot,
+    QuerySnapshot
+)
 
 __all__ = [
     'JsonDocumentReference',
@@ -16,6 +24,10 @@ __all__ = [
     'JsonQuerySnapshot',
     'JsonQueryDocumentSnapshot',
 ]
+
+_T = TypeVar('_T')
+
+from PyStoreDB.core.aggregate import Count
 
 
 class JsonDocumentReference(DocumentReference[Json]):
@@ -29,8 +41,7 @@ class JsonDocumentReference(DocumentReference[Json]):
 
     @property
     def parent(self) -> CollectionReference[Json]:
-        if self._delegate.parent is not None:
-            return JsonCollectionReference(self._delegate.parent)
+        return JsonCollectionReference(self._delegate.parent)
 
     def collection(self, path: str) -> CollectionReference[Json]:
         return JsonCollectionReference(self._delegate.collection(path))
@@ -76,7 +87,7 @@ class JsonDocumentSnapshot(DocumentSnapshot[Json]):
         self._delegate = delegate
 
 
-class JsonQueryDocumentSnapshot(JsonDocumentSnapshot):
+class JsonQueryDocumentSnapshot(JsonDocumentSnapshot, QueryDocumentSnapshot[Json]):
 
     def __init__(self, delegate):
         super().__init__(delegate)
@@ -110,10 +121,14 @@ class JsonQuerySnapshot(QuerySnapshot[Json]):
 
     @property
     def size(self) -> int:
-        return len(list(self.docs))
+        return Count(FieldPath.document_id).apply(self.docs)
 
 
 class JsonCollectionReference(JsonQuery, CollectionReference[Json]):
+
+    def with_converter(self, from_json: FromPyStoreDB[_T], to_json: ToPyStoreDB[_T]) -> CollectionReference[_T]:
+        from PyStoreDB._impl.converter import WithConverterCollectionReference
+        return WithConverterCollectionReference[_T](self, from_json, to_json)
 
     @property
     def path(self) -> str:
@@ -136,5 +151,5 @@ class JsonCollectionReference(JsonQuery, CollectionReference[Json]):
         self._delegate = delegate
 
 
-if __name__ != 'PyStore._impl':
+if __name__ != 'PyStoreDB._impl':
     raise ImportError('This module cannot be imported directly')

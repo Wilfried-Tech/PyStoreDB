@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 
-from PyStore.core import FieldPath, QueryDocumentSnapshot
-from PyStore.core.aggregate import Count, Sum, Min, Max, Mode, Variance, Median, StdDev, Avg
+from PyStoreDB.core import FieldPath, QueryDocumentSnapshot
+from PyStoreDB.core.aggregate import Count, Sum, Min, Max, Mode, Variance, Median, StdDev, Avg
 
 
 class TestAggregation(unittest.TestCase):

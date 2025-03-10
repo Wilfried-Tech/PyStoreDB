@@ -1,9 +1,9 @@
 from typing import Any
 
-from PyStore.constants import supported_types
+from PyStoreDB.constants import supported_types
 
 
-class PyStoreError(Exception):
+class PyStoreDBError(Exception):
     message = 'An Error Occur'
 
     def __init__(self, message: str | None = None):
@@ -18,11 +18,11 @@ class PyStoreError(Exception):
         return self.message
 
 
-class PyStoreInitialisationError(PyStoreError):
-    message = 'PyStore Already Initialised'
+class PyStoreDBInitialisationError(PyStoreDBError):
+    message = 'PyStoreDB Already Initialised'
 
 
-class PyStoreNameError(PyStoreError):
+class PyStoreDBNameError(PyStoreDBError):
     message = 'Name %s is not alphanumeric'
 
     def __init__(self, name: str, message: str = None):
@@ -32,7 +32,7 @@ class PyStoreNameError(PyStoreError):
         super().__init__(self.message % name)
 
 
-class PyStorePathError(PyStoreError):
+class PyStoreDBPathError(PyStoreDBError):
     message = 'Invalid Path %s'
     message_with_segment = 'Invalid Path %s not found segment %s'
 
@@ -47,7 +47,7 @@ class PyStorePathError(PyStoreError):
             super().__init__(self.message % (path, segment))
 
 
-class PyStoreUnsupportedTypeError(PyStoreError):
+class PyStoreDBUnsupportedTypeError(PyStoreDBError):
     supported_types_list = ','.join([str(x) for x in supported_types])
     message = f'type %s of value "%s" is unsupported\nsupported types:  ${supported_types_list}'
 

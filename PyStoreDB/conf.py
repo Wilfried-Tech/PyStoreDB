@@ -1,15 +1,15 @@
 import os
 
-from PyStore.engines import PyStoreEngine, PyStoreRawEngine
+from PyStoreDB.engines import PyStoreDBEngine, PyStoreDBRawEngine
 
 DEFAULT_STORE_NAME = 'default'
 
-__all__ = ['PyStoreSettings', 'DEFAULT_STORE_NAME']
+__all__ = ['PyStoreDBSettings', 'DEFAULT_STORE_NAME']
 
 
-class PyStoreSettings:
+class PyStoreDBSettings:
 
-    def __init__(self, store_dir: str = 'store', engine_class: PyStoreEngine = PyStoreRawEngine):
+    def __init__(self, store_dir: str = 'store', engine_class: PyStoreDBEngine = PyStoreDBRawEngine):
         self.store_dir = store_dir
         self.engine_class = engine_class
 
@@ -24,11 +24,11 @@ class PyStoreSettings:
 
     @property
     def engine_class(self):
-        return PyStoreRawEngine if self.store_dir is None else self.__engine_class
+        return PyStoreDBRawEngine if self.store_dir is None else self.__engine_class
 
     @engine_class.setter
     def engine_class(self, kclass: type):
-        if issubclass(kclass, PyStoreEngine):
+        if issubclass(kclass, PyStoreDBEngine):
             self.__engine_class = kclass
         else:
-            raise TypeError(f"{kclass.__name__} is not subclass of PyStoreEngine")
+            raise TypeError(f"{kclass.__name__} is not subclass of PyStoreDBEngine")

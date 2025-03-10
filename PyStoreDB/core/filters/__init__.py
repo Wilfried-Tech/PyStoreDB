@@ -1,6 +1,6 @@
-from PyStore.constants import Json, LOOKUP_SEP
-from PyStore.core.filters.lookups import Lookup, lookup_registry
-from PyStore.core.filters.utils import Q, F
+from PyStoreDB.constants import Json, LOOKUP_SEP
+from PyStoreDB.core.filters.lookups import Lookup, lookup_registry
+from PyStoreDB.core.filters.utils import Q, F
 
 __all__ = ['Q', 'F', 'Lookup', 'lookup_registry', 'FilteredQuery']
 
@@ -16,7 +16,6 @@ class FilteredQuery:
     def __iter__(self):
         self._index = 0
         self._current = None
-        print(f'Filters: {self.filters}')
         return self
 
     def __next__(self):
