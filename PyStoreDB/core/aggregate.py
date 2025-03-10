@@ -14,11 +14,17 @@ class Aggregation(abc.ABC):
     must provide an implementation for the `apply` method, which defines how
     the aggregation is performed on a given set of documents.
 
-    :ivar field_name: The field name on which the aggregation operates.
-    :type field_name: FieldPath
+    Attributes:
+      field_name (FieldPath): The field name on which the aggregation operates.
     """
 
     def __init__(self, field_name: FieldPath | str):
+        """
+        Initializes the Aggregation with a field name.
+
+        Args:
+            field_name (FieldPath | str): The field name on which the aggregation operates.
+        """
         self.field_name = field_name if isinstance(field_name, FieldPath) else FieldPath(field_name)
 
     @abc.abstractmethod
@@ -26,6 +32,15 @@ class Aggregation(abc.ABC):
         pass
 
     def get_numeric_values(self, docs: list[QueryDocumentSnapshot]) -> list[int | float]:
+        """
+        Get numeric values from the specified field in the documents.
+
+        Args:
+            docs (list[QueryDocumentSnapshot]): The list of documents to extract numeric values from.
+
+        Returns:
+            list[int | float]: A list of numeric values from the specified field.
+        """
         return [doc.get(self.field_name) for doc in docs if isinstance(doc.get(self.field_name), (int, float))]
 
 
@@ -37,13 +52,19 @@ class Count(Aggregation):
     based on certain field criteria. It optionally supports counting distinct
     values for the specified field, providing flexible aggregation capabilities.
 
-    :ivar field_name: The name of the field to count in the documents.
-    :type field_name: FieldPath | str | None
-    :ivar distinct: Whether to count only distinct values of the field.
-    :type distinct: bool
+    Attributes:
+        field_name (FieldPath | str | None): The name of the field to count in the documents.
+        distinct (bool): Whether to count only distinct values of the field.
     """
 
     def __init__(self, field_name: FieldPath | str = None, distinct: bool = False):
+        """
+        Initializes the Count aggregation with a field name and distinct flag.
+
+        Args:
+            field_name (FieldPath | str | None): The name of the field to count in the documents.
+            distinct (bool): Whether to count only distinct values of the field.
+        """
         super().__init__(field_name)
         self.distinct = distinct
 
@@ -61,10 +82,6 @@ class Sum(Aggregation):
     needs to sum up all the numeric values present in a specific field of a
     collection of documents. It ensures that only numeric values are considered
     in the summation process by filtering out non-numeric values beforehand.
-
-    :ivar field_name: The name of the field in the document whose values are
-                      to be summed.
-    :type field_name: str
     """
 
     def apply(self, docs: list[QueryDocumentSnapshot]):

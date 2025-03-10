@@ -42,19 +42,34 @@ class StoreObject(abc.ABC):
     @property
     @abc.abstractmethod
     def path(self) -> str:
+        """Abstract property that represents the storage path of the object."""
         pass
 
     @property
     @abc.abstractmethod
     def id(self) -> str:
+        """Abstract property that represents the unique identifier of the object."""
         pass
 
     def __eq__(self, other: Any) -> bool:
+        """Check if two StoreObject instances are equal based on their path and id.
+
+        Args:
+            other (Any): The other object to compare with.
+
+        Returns:
+            bool: True if both objects have the same path and id, False otherwise.
+        """
         if not isinstance(other, self.__class__):
             return False
         return self.path == other.path and self.id == other.id
 
     def __repr__(self):
+        """Return a string representation of the StoreObject instance.
+
+        Returns:
+            str: The string representation of the instance.
+        """
         return f"{self.__class__.__name__}('{self.path}')"
 
 
@@ -71,14 +86,39 @@ class CollectionReference(StoreObject, Query[_T], Generic[_T]):
 
     @abc.abstractmethod
     def add(self, data: _T) -> DocumentReference[_T]:
+        """Add a new document to the collection.
+
+        Args:
+            data (_T): The data to be added to the new document.
+
+        Returns:
+            DocumentReference[_T]: A reference to the newly added document.
+        """
         pass
 
     @abc.abstractmethod
     def doc(self, path: str = None) -> DocumentReference[_T]:
+        """Get a reference to a document in the collection.
+
+        Args:
+            path (str, optional): The path to the document. Defaults to None.
+
+        Returns:
+            DocumentReference[_T]: A reference to the document.
+        """
         pass
 
     @abc.abstractmethod
     def with_converter(self, from_json: Callable[[_T], _U], to_json: Callable[[_U], _T]) -> CollectionReference[_U]:
+        """Get a collection reference with data conversion functions.
+
+        Args:
+            from_json (Callable[[_T], _U]): Function to convert from JSON to the desired type.
+            to_json (Callable[[_U], _T]): Function to convert from the desired type to JSON.
+
+        Returns:
+            CollectionReference[_U]: A collection reference with the specified data conversion functions.
+        """
         pass
 
 
@@ -106,39 +146,94 @@ class DocumentSnapshot(abc.ABC, Generic[_T]):
     @property
     @abc.abstractmethod
     def id(self) -> str:
+        """Get the unique identifier of the document.
+
+        Returns:
+            str: The unique identifier of the document.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def reference(self) -> DocumentReference[_T]:
+        """Get the reference to the document in the database.
+
+        Returns:
+            DocumentReference[_T]: The reference to the document.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def exists(self) -> bool:
+        """Check if the document exists in the database.
+
+        Returns:
+            bool: True if the document exists, False otherwise.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def data(self) -> _T | None:
+        """Get the data of the document.
+
+        Returns:
+            _T | None: The data of the document, or None if the document does not exist.
+        """
         pass
 
     @abc.abstractmethod
     def get(self, field: str | FieldPath, default=None) -> Any:
+        """Get the value of a specific field in the document.
+
+        Args:
+            field (str | FieldPath): The field to retrieve the value from.
+            default (Any, optional): The default value to return if the field does not exist. Defaults to None.
+
+        Returns:
+            Any: The value of the specified field.
+        """
         pass
 
     def __getitem__(self, item: str) -> Any:
+        """Get the value of a specific field using the indexing syntax.
+
+        Args:
+            item (str): The field to retrieve the value from.
+
+        Returns:
+            Any: The value of the specified field.
+        """
         return self.get(item)
 
     def __bool__(self):
+        """Check if the document exists using the boolean context.
+
+        Returns:
+            bool: True if the document exists, False otherwise.
+        """
         return self.exists
 
     def __eq__(self, other: Any) -> bool:
+        """Check if two DocumentSnapshot instances are equal based on their id and reference.
+
+        Args:
+            other (Any): The other object to compare with.
+
+        Returns:
+            bool: True if both objects have the same id and reference, False otherwise.
+        """
         if not isinstance(other, DocumentSnapshot):
             return False
         return self.id == other.id and self.reference == other.reference
 
     def __repr__(self):
+        """Return a string representation of the DocumentSnapshot instance.
+
+        Returns:
+            str: The string representation of the instance.
+        """
         data = self.data
         if isinstance(data, dict):
             return f'<{self.__class__.__name__} {data}>'
@@ -164,26 +259,57 @@ class DocumentReference(StoreObject, Generic[_T]):
     @property
     @abc.abstractmethod
     def parent(self) -> CollectionReference[_T]:
+        """Get the reference to the collection that contains this document.
+
+        Returns:
+            CollectionReference[_T]: The reference to the parent collection.
+        """
         pass
 
     @abc.abstractmethod
     def collection(self, path: str) -> CollectionReference[_T]:
+        """Get a reference to a sub-collection within this document.
+
+        Args:
+            path (str): The path to the sub-collection.
+
+        Returns:
+            CollectionReference[_T]: A reference to the sub-collection.
+        """
         pass
 
     @abc.abstractmethod
     def set(self, data: _T, **kwargs) -> None:
+        """Set the data of the document.
+
+        Args:
+            data (_T): The data to set in the document.
+            **kwargs: Additional arguments for setting the data.
+        """
         pass
 
     @abc.abstractmethod
     def get(self) -> DocumentSnapshot[_T]:
+        """Get a snapshot of the document.
+
+        Returns:
+            DocumentSnapshot[_T]: A snapshot of the document.
+        """
         pass
 
     @abc.abstractmethod
     def update(self, data: Json = None, **kwargs) -> None:
+        """Update the data of the document.
+
+        Args:
+            data (Json, optional): The data to update in the document. Defaults to None.
+            **kwargs: Additional arguments for updating the data.
+        """
         pass
 
     @abc.abstractmethod
     def delete(self) -> None:
+        """Delete the document."""
         pass
 
 
@@ -204,4 +330,9 @@ class QueryDocumentSnapshot(DocumentSnapshot[_T], Generic[_T]):
     @property
     @abc.abstractmethod
     def data(self) -> _T:
+        """Get the core data contained in the document snapshot.
+
+        Returns:
+            _T: The core data contained in the document snapshot.
+        """
         pass
