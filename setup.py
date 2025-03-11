@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
+import re
 
 setup(
     name='PyStoreDB',
     version='0.1.0',
-    packages=find_packages(exclude=['tests']),
-    description='A simple NoSQL database greatly inspired by Firestore',
-    long_description=open('README.md').read(),
+    packages=find_packages(include=['PyStoreDB', 'PyStoreDB.*']),
+    description='A simple NoSQL database greatly inspired by Firestore and Django Filters.',
+    long_description=re.sub(r':\w+:', '', open('README.md').read()),
     long_description_content_type='text/markdown',
     url='https://github.com/Wilfried-Tech/PyStoreDB',
     license='MIT',

@@ -9,7 +9,7 @@ database that allows you to store and retrieve data in a simple and easy way.
 - **Simple and easy to use**: PyStoreDB is designed to be simple and easy to use.
 - **NoSQL database**: PyStoreDB is a NoSQL database.
 - **JSON-based**: PyStoreDB is a JSON-based database.
-- **Subcollections**: PyStoreDB supports subcollections.
+- **Sub collections**: PyStoreDB supports sub collections.
 - **Document CRUD operations**: PyStoreDB supports document CRUD operations.
 - **Collection Querying operations**: PyStoreDB supports collection querying operations. and where clause is inspired by
   Django Filters.
@@ -17,12 +17,15 @@ database that allows you to store and retrieve data in a simple and easy way.
 
 ## :hammer: Installation
 
-package is not yet available on PyPI, but you can install it from the source code:
-
 ```bash
+# from source
 git clone https://github.com/Wilfried-Tech/PyStoreDB
 cd PyStoreDB
 python setup.py install
+
+# or
+
+pip install PyStoreDB
 ```
 
 ## :book: Usage
@@ -38,6 +41,7 @@ from PyStoreDB.engines import PyStoreDBRawEngine
 # engine_class is optional, default is PyStoreDBRawEngine
 # store_dir can be ':memory:' for in-memory storage
 PyStoreDB.settings = PyStoreDBSettings(store_dir="data", engine_class=PyStoreDBRawEngine)
+# setting is optional default is PyStoreDBSettings(store_dir="store", engine_class=PyStoreDBRawEngine)
 PyStoreDB.initialize()
 
 store = PyStoreDB.get_instance(name="my_store")  # name is optional
@@ -63,7 +67,7 @@ user.set({"name": "John Doe", "age": 26})
 # update the document
 user.update({"age": 27}) or user.update(age=27)
 # delete the document
-user.delete()  # note that delete document does not delete subcollections
+user.delete()  # note that delete document does not delete sub collections
 ```
 
 ### Working with collections
@@ -76,14 +80,14 @@ users = store.collection("users")
 all_users = users.get()
 ```
 
-### Working with subcollections
+### Working with sub collections
 
 ```python
 # Get a document reference
 user = store.collection("users").doc('ID')
-# Get a subcollection reference
+# Get a sub collection reference
 posts = user.collection("posts")
-# Add a document to the subcollection
+# Add a document to the sub collection
 post1 = posts.add({"title": "My first post", "content": "Hello, World!"})
 ```
 
@@ -104,7 +108,7 @@ users = store.collection("users").where(age__gt=25).get()
 - [x] Simple and easy to use
 - [x] NoSQL database
 - [x] JSON-based
-- [x] Subcollections
+- [x] Sub collections
 - [x] Document CRUD operations
 - [x] Collection Querying operations
 - [ ] Indexing
